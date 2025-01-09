@@ -35,5 +35,18 @@ func SetupRoutes() *mux.Router {
 	protectedRoutes.HandleFunc("/permissions/{id}", permissionHandler.GetPermission).Methods("GET")
 	protectedRoutes.HandleFunc("/permissions/{id}", permissionHandler.UpdatePermission).Methods("PUT")
 	protectedRoutes.HandleFunc("/permissions/{id}", permissionHandler.DeletePermission).Methods("DELETE")
+
+	return r
+}
+
+func SetupStreamRoutes() *mux.Router {
+	r := mux.NewRouter()
+	streamHandler := handlers.NewStreamHandler()
+	scheduleHandler := handlers.NewScheduleHandler()
+
+	protectedRoutes := r.PathPrefix("/api").Subrouter()
+	protectedRoutes.Use(middlewares.AuthMiddleware)
+	protectedRoutes.HandleFunc("/streams", streamHandler.Register).Methods("POST")
+	protectedRoutes.HandleFunc("/schedules", scheduleHandler.Register).Methods("POST")
 	return r
 }

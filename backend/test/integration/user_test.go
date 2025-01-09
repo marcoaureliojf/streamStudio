@@ -3,57 +3,53 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
-	"time"
 
-	"github.com/marcoaureliojf/streamStudio/backend/internal/config"
-	"github.com/marcoaureliojf/streamStudio/backend/internal/database"
-	"github.com/marcoaureliojf/streamStudio/backend/internal/database/models"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/handlers"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/routes"
+	"github.com/marcoaureliojf/streamStudio/backend/test/integration/testhelper"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-func createTeam(db *gorm.DB) (uint, error) {
-	team := models.Team{
-		Name: fmt.Sprintf("Test Team %d", time.Now().UnixNano()),
-	}
-	result := db.Create(&team)
-	if result.Error != nil {
-		return 0, result.Error
-	}
-	return team.ID, nil
-}
+// func createTeam(db *gorm.DB) (uint, error) {
+// 	team := models.Team{
+// 		Name: fmt.Sprintf("Test Team %d", time.Now().UnixNano()),
+// 	}
+// 	result := db.Create(&team)
+// 	if result.Error != nil {
+// 		return 0, result.Error
+// 	}
+// 	return team.ID, nil
+// }
 
-func setupTestDB() {
+// func setupTestDB() {
 
-	cfg := config.Config{
-		DBHost:     "localhost",
-		DBPort:     5432,
-		DBUser:     "postgres",
-		DBPassword: "planetbass",
-		DBName:     "streamstudio_test",
-		JWTSecret:  "test-secret",
-		ServerPort: 8080,
-	}
-	database.Connect(cfg)
+// 	cfg := config.Config{
+// 		DBHost:     "localhost",
+// 		DBPort:     5432,
+// 		DBUser:     "postgres",
+// 		DBPassword: "planetbass",
+// 		DBName:     "streamstudio_test",
+// 		JWTSecret:  "test-secret",
+// 		ServerPort: 8080,
+// 	}
+// 	database.Connect(cfg)
 
-	teamId, err := createTeam(database.GetDB())
-	if err != nil {
-		log.Fatal("Erro ao criar equipe de teste: ", err)
-	}
-	os.Setenv("TEST_TEAM_ID", strconv.FormatUint(uint64(teamId), 10))
-}
+// 	teamId, err := createTeam(database.GetDB())
+// 	if err != nil {
+// 		log.Fatal("Erro ao criar equipe de teste: ", err)
+// 	}
+// 	os.Setenv("TEST_TEAM_ID", strconv.FormatUint(uint64(teamId), 10))
+// }
 
 func TestIntegrationRegisterUser(t *testing.T) {
-	setupTestDB()
+	testhelper.SetupTestDB()
+	//setupTestDB()
 
 	teamIdStr := os.Getenv("TEST_TEAM_ID")
 	teamId, err := strconv.ParseUint(teamIdStr, 10, 64)
@@ -87,7 +83,8 @@ func TestIntegrationRegisterUser(t *testing.T) {
 }
 
 func TestIntegrationLoginUser(t *testing.T) {
-	setupTestDB()
+	testhelper.SetupTestDB()
+	//setupTestDB()
 	teamIdStr := os.Getenv("TEST_TEAM_ID")
 	teamId, err := strconv.ParseUint(teamIdStr, 10, 64)
 	if err != nil {
@@ -133,7 +130,7 @@ func TestIntegrationLoginUser(t *testing.T) {
 }
 
 func TestIntegrationLoginUserFail(t *testing.T) {
-	setupTestDB()
+	testhelper.SetupTestDB()
 	router := routes.SetupRoutes()
 
 	userLoginRequest := handlers.UserLoginRequest{
@@ -152,7 +149,7 @@ func TestIntegrationLoginUserFail(t *testing.T) {
 }
 
 func TestIntegrationProtectedEndpoint(t *testing.T) {
-	setupTestDB()
+	testhelper.SetupTestDB()
 	teamIdStr := os.Getenv("TEST_TEAM_ID")
 	teamId, err := strconv.ParseUint(teamIdStr, 10, 64)
 	if err != nil {
@@ -205,7 +202,7 @@ func TestIntegrationProtectedEndpoint(t *testing.T) {
 }
 
 func TestIntegrationProtectedEndpointFail(t *testing.T) {
-	setupTestDB()
+	testhelper.SetupTestDB()
 	router := routes.SetupRoutes()
 
 	reqProtected, _ := http.NewRequest("GET", "/api/test", nil)

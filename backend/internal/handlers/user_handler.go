@@ -48,15 +48,54 @@ type ErrorResponse struct {
 }
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
+	// Set response headers
+	w.Header().Set("Content-Type", "application/json")
+
+	// Validate content type
+	if r.Header.Get("Content-Type") != "application/json" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Message: "O tipo de conteúdo deve ser application/json"})
+		return
+	}
+
+	// Check if body exists
+	if r.Body == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Message: "O corpo da solicitação é obrigatório"})
+		return
+	}
+
+	// Read and validate request
 	var request UserRegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		log.Println("Erro ao decodificar o corpo da requisição:", err)
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		log.Printf("Erro ao decodificar o corpo da requisição: %v\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrorResponse{Message: "Corpo da requisição inválido"})
 		return
 	}
 
+	// Validate required fields
+	if request.Email == "" || request.Password == "" || request.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Message: "Nome, e-mail e senha são obrigatórios"})
+		return
+	}
+
+	// Continue with existing password hashing code
+	//hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	// ...existing code...
+
+	//var request UserRegisterRequest
+	//if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	//	log.Println("Erro ao decodificar o corpo da requisição:", err)
+	//	w.WriteHeader(http.StatusBadRequest)
+	//	json.NewEncoder(w).Encode(ErrorResponse{Message: "Corpo da requisição inválido"})
+	//	return
+	//}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+
 	if err != nil {
 		log.Println("Erro ao gerar hash da senha:", err)
 		w.WriteHeader(http.StatusInternalServerError)
