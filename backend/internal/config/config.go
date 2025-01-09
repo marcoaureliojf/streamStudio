@@ -17,6 +17,7 @@ type Config struct {
 	JWTSecret        string
 	ServerPort       int
 	StreamServerPort int
+	RabbitMQHost     string
 }
 
 func LoadConfig() Config {
@@ -48,5 +49,6 @@ func LoadConfig() Config {
 		JWTSecret:        os.Getenv("JWT_SECRET"),
 		ServerPort:       serverPort,
 		StreamServerPort: streamServerPort,
+		RabbitMQHost:     os.Getenv("DB_HOST"),
 	}
 }

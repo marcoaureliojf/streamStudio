@@ -5,25 +5,26 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/joho/godotenv"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/config"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/database"
+	"github.com/marcoaureliojf/streamStudio/backend/internal/queue"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/routes"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Erro ao carregar o arquivo .env: %v", err)
-	}
-
 	cfg := config.LoadConfig()
 	database.Connect(cfg)
 
+	rabbitMQ, err := queue.NewRabbitMQ(cfg)
+	if err != nil {
+		log.Fatal("Erro ao iniciar RabbitMQ: ", err)
+	}
+	defer rabbitMQ.Close()
+
 	r := routes.SetupStreamRoutes()
 
-	streamServerAddr := fmt.Sprintf(":%d", cfg.StreamServerPort)
+	serverAddr := fmt.Sprintf(":%d", cfg.StreamServerPort)
 
-	log.Printf("Serviço de streams rodando na porta %s\n", streamServerAddr)
-	log.Fatal(http.ListenAndServe(streamServerAddr, r))
+	log.Printf("Serviço de streams rodando na porta %s\n", serverAddr)
+	log.Fatal(http.ListenAndServe(serverAddr, r))
 }

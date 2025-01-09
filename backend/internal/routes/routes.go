@@ -43,10 +43,22 @@ func SetupStreamRoutes() *mux.Router {
 	r := mux.NewRouter()
 	streamHandler := handlers.NewStreamHandler()
 	scheduleHandler := handlers.NewScheduleHandler()
+	signalingHandler := handlers.NewSignalingHandler()
 
 	protectedRoutes := r.PathPrefix("/api").Subrouter()
 	protectedRoutes.Use(middlewares.AuthMiddleware)
+	protectedRoutes.HandleFunc("/offer", signalingHandler.Offer).Methods("POST")
 	protectedRoutes.HandleFunc("/streams", streamHandler.Register).Methods("POST")
+	protectedRoutes.HandleFunc("/streams", streamHandler.GetStreams).Methods("GET")
+	protectedRoutes.HandleFunc("/streams/{id}", streamHandler.GetStream).Methods("GET")
+	protectedRoutes.HandleFunc("/streams/{id}", streamHandler.UpdateStream).Methods("PUT")
+	protectedRoutes.HandleFunc("/streams/{id}", streamHandler.DeleteStream).Methods("DELETE")
+
 	protectedRoutes.HandleFunc("/schedules", scheduleHandler.Register).Methods("POST")
+	protectedRoutes.HandleFunc("/schedules", scheduleHandler.GetSchedules).Methods("GET")
+	protectedRoutes.HandleFunc("/schedules/{id}", scheduleHandler.GetSchedule).Methods("GET")
+	protectedRoutes.HandleFunc("/schedules/{id}", scheduleHandler.UpdateSchedule).Methods("PUT")
+	protectedRoutes.HandleFunc("/schedules/{id}", scheduleHandler.DeleteSchedule).Methods("DELETE")
+
 	return r
 }
