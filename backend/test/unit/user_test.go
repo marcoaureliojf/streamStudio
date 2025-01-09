@@ -22,7 +22,7 @@ func setupTestDB() {
 
 func TestRegisterUser(t *testing.T) {
 	setupTestDB()
-	userHandler := handlers.NewUserHandler()
+	// userHandler := handlers.NewUserHandler()
 	router := routes.SetupRoutes()
 
 	userRegisterRequest := handlers.UserRegisterRequest{
@@ -51,7 +51,7 @@ func TestRegisterUser(t *testing.T) {
 
 func TestLoginUser(t *testing.T) {
 	setupTestDB()
-	userHandler := handlers.NewUserHandler()
+	//userHandler := handlers.NewUserHandler()
 	router := routes.SetupRoutes()
 
 	userRegisterRequest := handlers.UserRegisterRequest{
@@ -91,7 +91,7 @@ func TestLoginUser(t *testing.T) {
 
 func TestLoginUserFail(t *testing.T) {
 	setupTestDB()
-	userHandler := handlers.NewUserHandler()
+	//userHandler := handlers.NewUserHandler()
 	router := routes.SetupRoutes()
 
 	userLoginRequest := handlers.UserLoginRequest{
