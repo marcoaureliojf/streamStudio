@@ -1,9 +1,8 @@
 # Environment variables
-.env
-.env.*
+**/.env
 
-# Test binary, built with `go test -c`
-*.test
+# Test files
+**/test
 
 # Output of the go coverage tool
 *.out
