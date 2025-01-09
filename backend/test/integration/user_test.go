@@ -3,39 +3,70 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/marcoaureliojf/streamStudio/backend/internal/config"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/database"
+	"github.com/marcoaureliojf/streamStudio/backend/internal/database/models"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/handlers"
 	"github.com/marcoaureliojf/streamStudio/backend/internal/routes"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
+func createTeam(db *gorm.DB) (uint, error) {
+	team := models.Team{
+		Name: fmt.Sprintf("Test Team %d", time.Now().UnixNano()),
+	}
+	result := db.Create(&team)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return team.ID, nil
+}
+
 func setupTestDB() {
-	os.Setenv("DB_HOST", "localhost")
-	os.Setenv("DB_PORT", "5432")
-	os.Setenv("DB_USER", "postgres")
-	os.Setenv("DB_PASSWORD", "planetbass")
-	os.Setenv("DB_NAME", "streamstudio")
-	os.Setenv("JWT_SECRET", "asdfasdfdfwerqwerytfghfgh")
-	os.Setenv("SERVER_PORT", "8181")
-	cfg := config.LoadConfig()
+
+	cfg := config.Config{
+		DBHost:     "localhost",
+		DBPort:     5432,
+		DBUser:     "postgres",
+		DBPassword: "planetbass",
+		DBName:     "streamstudio_test",
+		JWTSecret:  "test-secret",
+		ServerPort: 8080,
+	}
 	database.Connect(cfg)
 
+	teamId, err := createTeam(database.GetDB())
+	if err != nil {
+		log.Fatal("Erro ao criar equipe de teste: ", err)
+	}
+	os.Setenv("TEST_TEAM_ID", strconv.FormatUint(uint64(teamId), 10))
 }
 
 func TestIntegrationRegisterUser(t *testing.T) {
 	setupTestDB()
+
+	teamIdStr := os.Getenv("TEST_TEAM_ID")
+	teamId, err := strconv.ParseUint(teamIdStr, 10, 64)
+	if err != nil {
+		log.Fatal("Erro ao converter teamId", err)
+	}
+
 	router := routes.SetupRoutes()
 	userRegisterRequest := handlers.UserRegisterRequest{
 		Name:     "Test User",
 		Email:    "integration@test.com",
 		Password: "testpassword",
-		TeamID:   1,
+		TeamID:   uint(teamId),
 	}
 
 	requestBody, _ := json.Marshal(userRegisterRequest)
@@ -52,18 +83,23 @@ func TestIntegrationRegisterUser(t *testing.T) {
 	json.NewDecoder(rr.Body).Decode(&responseBody)
 	assert.Equal(t, userRegisterRequest.Name, responseBody.Name)
 	assert.Equal(t, userRegisterRequest.Email, responseBody.Email)
-	assert.Equal(t, userRegisterRequest.TeamID, responseBody.TeamID)
+	assert.Equal(t, uint(teamId), responseBody.TeamID)
 }
 
 func TestIntegrationLoginUser(t *testing.T) {
 	setupTestDB()
+	teamIdStr := os.Getenv("TEST_TEAM_ID")
+	teamId, err := strconv.ParseUint(teamIdStr, 10, 64)
+	if err != nil {
+		log.Fatal("Erro ao converter teamId", err)
+	}
 	router := routes.SetupRoutes()
 
 	userRegisterRequest := handlers.UserRegisterRequest{
 		Name:     "Test User",
 		Email:    "integration2@test.com",
 		Password: "testpassword",
-		TeamID:   1,
+		TeamID:   uint(teamId),
 	}
 
 	requestBodyRegister, _ := json.Marshal(userRegisterRequest)
@@ -114,15 +150,21 @@ func TestIntegrationLoginUserFail(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, rrLogin.Code)
 }
+
 func TestIntegrationProtectedEndpoint(t *testing.T) {
 	setupTestDB()
+	teamIdStr := os.Getenv("TEST_TEAM_ID")
+	teamId, err := strconv.ParseUint(teamIdStr, 10, 64)
+	if err != nil {
+		log.Fatal("Erro ao converter teamId", err)
+	}
 	router := routes.SetupRoutes()
 
 	userRegisterRequest := handlers.UserRegisterRequest{
 		Name:     "Test User",
 		Email:    "integration3@test.com",
 		Password: "testpassword",
-		TeamID:   1,
+		TeamID:   uint(teamId),
 	}
 
 	requestBodyRegister, _ := json.Marshal(userRegisterRequest)
@@ -170,5 +212,4 @@ func TestIntegrationProtectedEndpointFail(t *testing.T) {
 	rrProtected := httptest.NewRecorder()
 	router.ServeHTTP(rrProtected, reqProtected)
 	assert.Equal(t, http.StatusUnauthorized, rrProtected.Code)
-
 }
