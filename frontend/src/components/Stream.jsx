@@ -3,10 +3,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from './Auth';
 
 const Stream = () => {
-     const { token } = useAuth();
-    const localVideo = useRef();
- const [localStream, setLocalStream] = useState(null);
-     const [remoteSDP, setRemoteSDP] = useState(null);
+const { token } = useAuth();
+const localVideo = useRef();
+const [localStream, setLocalStream] = useState(null);
+    // eslint-disable-next-line no-unused-vars
+const [remoteSDP, setRemoteSDP] = useState(null);
 
      useEffect(() => {
        const startStream = async () => {
