@@ -18,6 +18,9 @@ type Config struct {
 	ServerPort       int
 	StreamServerPort int
 	RabbitMQHost     string
+	RabbitMQPort     int
+	RabbitMQUser     string
+	RabbitMQPassword string
 }
 
 func LoadConfig() Config {
@@ -40,6 +43,11 @@ func LoadConfig() Config {
 		log.Fatal("Erro ao converter a porta do servidor:", err)
 	}
 
+	rabbitMQPort, err := strconv.Atoi(os.Getenv("RABBITMQ_PORT"))
+	if err != nil {
+		log.Fatalf("Invalid RABBITMQ_PORT value: %v", err)
+	}
+
 	return Config{
 		DBHost:           os.Getenv("DB_HOST"),
 		DBPort:           dbPort,
@@ -49,6 +57,9 @@ func LoadConfig() Config {
 		JWTSecret:        os.Getenv("JWT_SECRET"),
 		ServerPort:       serverPort,
 		StreamServerPort: streamServerPort,
-		RabbitMQHost:     os.Getenv("DB_HOST"),
+		RabbitMQHost:     os.Getenv("RABBITMQ_HOST"),
+		RabbitMQPort:     rabbitMQPort,
+		RabbitMQUser:     os.Getenv("RABBITMQ_USER"),
+		RabbitMQPassword: os.Getenv("RABBITMQ_PASSWORD"),
 	}
 }

@@ -24,7 +24,7 @@ const [remoteSDP, setRemoteSDP] = useState(null);
 
    const handleOffer = async () => {
     if (!localStream) {
-        console.log('Local stream not available');
+        console.log('Stream local não disponivel');
         return;
     }
      
@@ -53,7 +53,7 @@ const [remoteSDP, setRemoteSDP] = useState(null);
    
     try {
       const response = await axios.post(
-          'http://localhost:8081/api/offer',
+          'http://localhost:8182/api/offer',
           {
             sdp: offer.sdp,
           },

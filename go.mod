@@ -40,6 +40,7 @@ require (
 	github.com/pion/webrtc/v3 v3.3.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
+	github.com/rs/cors v1.11.1 // indirect
 	github.com/streadway/amqp v1.1.0 // indirect
 	github.com/wlynxg/anet v0.0.3 // indirect
 	golang.org/x/net v0.22.0 // indirect

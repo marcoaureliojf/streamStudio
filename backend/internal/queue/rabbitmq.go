@@ -8,6 +8,29 @@ import (
 	"github.com/streadway/amqp"
 )
 
+var conn *amqp.Connection
+
+func Init(cfg config.Config) {
+	dsn := fmt.Sprintf("amqp://%s:%s@%s:%d/",
+		cfg.RabbitMQUser,
+		cfg.RabbitMQPassword,
+		cfg.RabbitMQHost,
+		cfg.RabbitMQPort,
+	)
+
+	var err error
+	conn, err = amqp.Dial(dsn)
+	if err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
+
+	log.Println("Connected to RabbitMQ")
+}
+
+func GetConnection() *amqp.Connection {
+	return conn
+}
+
 type RabbitMQ struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
