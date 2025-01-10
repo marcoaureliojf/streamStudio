@@ -19,8 +19,13 @@ func NewSignalingHandler() *SignalingHandler {
 type SDPOfferRequest struct {
 	SDP string `json:"sdp"`
 }
+
 type SDPOfferResponse struct {
 	SDP string `json:"sdp"`
+}
+
+type ICEServerRequest struct {
+	Candidate *webrtc.ICECandidateInit `json:"candidate"`
 }
 
 func (h *SignalingHandler) Offer(w http.ResponseWriter, r *http.Request) {
@@ -85,4 +90,24 @@ func (h *SignalingHandler) Offer(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
+}
+func (h *SignalingHandler) IceCandidate(w http.ResponseWriter, r *http.Request) {
+	user := middlewares.GetUserFromContext(r.Context())
+	if user == nil {
+		log.Println("Usuário não autenticado")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(ErrorResponse{Message: "Não autorizado"})
+		return
+	}
+	var request ICEServerRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Println("Erro ao decodificar o corpo da requisição:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Message: "Corpo da requisição inválido"})
+		return
+	}
+
+	log.Println("Candidato ICE:", request.Candidate)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(ErrorResponse{Message: "Candidato recebido"})
 }
