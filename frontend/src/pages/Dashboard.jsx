@@ -1,6 +1,6 @@
 import React from 'react';
+import { useAuth } from '../components/Auth';
 import Stream from '../components/Stream';
-import { useAuth } from '../components/auth';
 const Dashboard = () => {
     const { logout, user } = useAuth();
 
@@ -9,7 +9,8 @@ const Dashboard = () => {
             <h2>Dashboard</h2>
             {user && <p>Bem-vindo, {user.name}</p>}
              <Stream />
-           <button type="button" onClick={logout}>Logout</button>
+           {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+           <button onClick={logout}>Logout</button>
         </div>
     );
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './components/auth';
+import { AuthProvider } from './components/Auth';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import './styles/styles.css';
