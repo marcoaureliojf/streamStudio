@@ -40,14 +40,15 @@ func SetupRoutes() *mux.Router {
 }
 
 func SetupStreamRoutes() *mux.Router {
-	r := mux.NewRouter()
+	sr := mux.NewRouter()
 	streamHandler := handlers.NewStreamHandler()
 	scheduleHandler := handlers.NewScheduleHandler()
 	signalingHandler := handlers.NewSignalingHandler()
 
-	protectedRoutes := r.PathPrefix("/api").Subrouter()
+	protectedRoutes := sr.PathPrefix("/api").Subrouter()
 	protectedRoutes.Use(middlewares.AuthMiddleware)
 	protectedRoutes.HandleFunc("/offer", signalingHandler.Offer).Methods("POST")
+	protectedRoutes.HandleFunc("/icecandidate", signalingHandler.IceCandidate).Methods("POST")
 	protectedRoutes.HandleFunc("/streams", streamHandler.Register).Methods("POST")
 	protectedRoutes.HandleFunc("/streams", streamHandler.GetStreams).Methods("GET")
 	protectedRoutes.HandleFunc("/streams/{id}", streamHandler.GetStream).Methods("GET")
@@ -60,5 +61,5 @@ func SetupStreamRoutes() *mux.Router {
 	protectedRoutes.HandleFunc("/schedules/{id}", scheduleHandler.UpdateSchedule).Methods("PUT")
 	protectedRoutes.HandleFunc("/schedules/{id}", scheduleHandler.DeleteSchedule).Methods("DELETE")
 
-	return r
+	return sr
 }

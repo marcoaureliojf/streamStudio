@@ -11,12 +11,12 @@ import (
 var conn *amqp.Connection
 
 func Init(cfg config.Config) {
-	dsn := fmt.Sprintf("amqp://%s:%s@%s:%d/",
-		cfg.RabbitMQUser,
-		cfg.RabbitMQPassword,
-		cfg.RabbitMQHost,
-		cfg.RabbitMQPort,
-	)
+	if cfg.RabbitMQUser == "" || cfg.RabbitMQPassword == "" || cfg.RabbitMQHost == "" {
+		log.Fatalf("Configuração do RabbitMQ está incompleta")
+	}
+
+	dsn := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.RabbitMQUser, cfg.RabbitMQPassword, cfg.RabbitMQHost, cfg.RabbitMQPort)
+	log.Printf("RabbitMQ DSN: %s", dsn)
 
 	var err error
 	conn, err = amqp.Dial(dsn)
@@ -38,9 +38,9 @@ type RabbitMQ struct {
 }
 
 func NewRabbitMQ(cfg config.Config) (*RabbitMQ, error) {
-	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.DBUser, cfg.DBPassword, cfg.DBHost, 5672))
-	if err != nil {
-		return nil, fmt.Errorf("falha ao conectar ao RabbitMQ: %w", err)
+	conn := GetConnection()
+	if conn == nil {
+		return nil, fmt.Errorf("conexão RabbitMQ não inicializada")
 	}
 
 	ch, err := conn.Channel()
@@ -65,6 +65,9 @@ func NewRabbitMQ(cfg config.Config) (*RabbitMQ, error) {
 		queue:   q,
 	}, nil
 }
+
+// Outros métodos permanecem iguais...
+
 func (r *RabbitMQ) Publish(body []byte) error {
 	err := r.channel.Publish(
 		"",           // exchange

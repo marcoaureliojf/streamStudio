@@ -40,7 +40,7 @@ func LoadConfig() Config {
 	}
 	streamServerPort, err := strconv.Atoi(os.Getenv("STREAM_SERVER_PORT"))
 	if err != nil {
-		log.Fatal("Erro ao converter a porta do servidor:", err)
+		log.Fatal("Erro ao converter a porta do servidor de streaming:", err)
 	}
 
 	rabbitMQPort, err := strconv.Atoi(os.Getenv("RABBITMQ_PORT"))

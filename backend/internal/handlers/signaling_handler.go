@@ -10,6 +10,7 @@ import (
 )
 
 type SignalingHandler struct {
+	peerConnection *webrtc.PeerConnection
 }
 
 func NewSignalingHandler() *SignalingHandler {
@@ -56,6 +57,8 @@ func (h *SignalingHandler) Offer(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	h.peerConnection = peerConnection
+
 	offer := webrtc.SessionDescription{
 		Type: webrtc.SDPTypeOffer,
 		SDP:  request.SDP,
@@ -91,6 +94,7 @@ func (h *SignalingHandler) Offer(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
+
 func (h *SignalingHandler) IceCandidate(w http.ResponseWriter, r *http.Request) {
 	user := middlewares.GetUserFromContext(r.Context())
 	if user == nil {
@@ -99,6 +103,13 @@ func (h *SignalingHandler) IceCandidate(w http.ResponseWriter, r *http.Request) 
 		json.NewEncoder(w).Encode(ErrorResponse{Message: "Não autorizado"})
 		return
 	}
+	if h.peerConnection == nil {
+		log.Println("Conexão WebRTC não iniciada")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Message: "Conexão WebRTC não iniciada"})
+		return
+	}
+
 	var request ICEServerRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		log.Println("Erro ao decodificar o corpo da requisição:", err)
@@ -107,7 +118,15 @@ func (h *SignalingHandler) IceCandidate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	log.Println("Candidato ICE:", request.Candidate)
+	err := h.peerConnection.AddICECandidate(*request.Candidate)
+	if err != nil {
+		log.Println("Erro ao adicionar candidato ICE", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(ErrorResponse{Message: "Erro ao processar a requisição"})
+		return
+	}
+
+	log.Println("Candidato ICE adicionado com sucesso")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(ErrorResponse{Message: "Candidato recebido"})
 }

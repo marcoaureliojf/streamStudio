@@ -20,15 +20,13 @@ func main() {
 	}
 
 	cfg := config.LoadConfig()
-
 	database.Connect(cfg)
+
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
 	}
 
 	queue.Init(cfg)
-
-	rs := routes.SetupStreamRoutes()
 
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:3000"},
@@ -36,8 +34,24 @@ func main() {
 		AllowedHeaders: []string{"Authorization", "Content-Type"},
 	})
 
+	// Configuração de rotas
+	rs := routes.SetupStreamRoutes()
+	r := routes.SetupRoutes()
+
+	serverAddr := fmt.Sprintf(":%d", cfg.ServerPort)
 	streamServerAddr := fmt.Sprintf(":%d", cfg.StreamServerPort)
 
-	log.Printf("Serviço de streaming rodando na porta %s\n", streamServerAddr)
-	log.Fatal(http.ListenAndServe(streamServerAddr, corsMiddleware.Handler(rs)))
+	// Inicia o servidor de streaming em uma goroutine
+	go func() {
+		log.Printf("Serviço de streaming rodando na porta %s\n", streamServerAddr)
+		if err := http.ListenAndServe(streamServerAddr, corsMiddleware.Handler(rs)); err != nil {
+			log.Fatalf("Erro no serviço de streaming: %v", err)
+		}
+	}()
+
+	// Inicia o servidor principal
+	log.Printf("Servidor rodando na porta %s\n", serverAddr)
+	if err := http.ListenAndServe(serverAddr, corsMiddleware.Handler(r)); err != nil {
+		log.Fatalf("Erro no servidor principal: %v", err)
+	}
 }
