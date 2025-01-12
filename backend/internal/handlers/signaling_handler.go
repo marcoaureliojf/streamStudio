@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/marcoaureliojf/streamStudio/backend/internal/middlewares"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 )
 
 type SignalingHandler struct {
